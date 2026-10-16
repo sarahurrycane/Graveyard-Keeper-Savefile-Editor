@@ -478,6 +478,19 @@ def modify_save(data, shash):
                 savefiles[shash]["savedata"]["_inventory"]["v"]["_params"]["v"]["_res_v"]["v"].append(
                     {"type": 19, "v": 1})
 
+    # Apply the decay (durability) of single bodies the user changed. This happens before the WGO loop and the drop
+    # removal, because those can move or delete bodies, which would make the stored indexes invalid
+    for body in data.get("bodies", []):
+        if not body.get("changed"):
+            continue
+        item = get_body_item(savefiles[shash]["savedata"], body["source"], body["index"], body["position"])
+        if item is None:
+            print("Body at " + body["source"] + " " + str(body["index"]) + " not found, skipping it")
+            continue
+        new_durability = min(1.0, max(0.0, float(body["durability"])))
+        item["v"]["_params"]["v"]["_durability"] = \
+            modify_value_type(shash, item["v"]["_params"]["v"]["_durability"], new_durability)
+
     # In the following block World Game Objects are iterated
     # For us specifically interesting are all storage units + workers and bodies to modify the items in them
     i2 = 0  # Index of the storage unit in our storage unit array
@@ -840,6 +853,9 @@ def editable_values(shash):
     if "secondary_inventory" in data["savedata"]["_inventory"]["v"]:
         obj["subinventory"] = get_inventory(data["savedata"]["_inventory"]["v"]["secondary_inventory"]["v"])
 
+    # Extract every body in the world (graves, fridges, tables, ...) so its decay can be edited individually
+    obj["bodies"] = get_bodies(data["savedata"])
+
     obj["drops"] = list()
     # To display the objects which will get deleted when you clear the drops we extract them
     for drop in data["savedata"]["drops"]["v"]:
@@ -900,6 +916,62 @@ def get_inventory(inv):
         out.append(item)
         i += 1
     return out
+
+
+# Return the body item at a given location ("wgo" index or "drop" index) or None if there is no body there
+def get_body_item(savedata, source, index, position):
+    try:
+        if source == "wgo":
+            item = savedata["map"]["v"]["_wgos"]["v"][index]["v"]["-1126421579"]["v"]["inventory"]["v"][position]
+        else:
+            item = savedata["drops"]["v"][index]["v"]["res"]
+    except (KeyError, IndexError, TypeError):
+        return None
+
+    if not isinstance(item, dict) or not isinstance(item.get("v"), dict):
+        return None
+    if item["v"].get("id", {}).get("v") != "body" or "_params" not in item["v"]:
+        return None
+    return item
+
+
+# Function to list all bodies in the world, so the decay (durability) of a single body can be changed
+def get_bodies(savedata):
+    bodies = []
+
+    def add_body(source, index, position, location):
+        item = get_body_item(savedata, source, index, position)
+        if item is None:
+            return
+
+        contents = []
+        if "inventory" in item["v"] and item["v"]["inventory"]["type"] == Types.GenericList:
+            contents = [x["v"]["id"]["v"] for x in item["v"]["inventory"]["v"]
+                        if isinstance(x["v"]["id"]["v"], str)]
+
+        bodies.append({
+            "source": source,
+            "index": index,
+            "position": position,
+            "location": location,
+            "durability": item["v"]["_params"]["v"]["_durability"]["v"],
+            "contents": contents
+        })
+
+    for i, wgo in enumerate(savedata["map"]["v"]["_wgos"]["v"]):
+        try:
+            inventory = wgo["v"]["-1126421579"]["v"]["inventory"]["v"]
+        except (KeyError, TypeError):
+            continue
+        if not isinstance(inventory, list):
+            continue
+        for p in range(len(inventory)):
+            add_body("wgo", i, p, wgo["v"]["obj_id"]["v"])
+
+    for i in range(len(savedata["drops"]["v"])):
+        add_body("drop", i, 0, "drop")
+
+    return bodies
 
 
 # Edit a single inventory, apply the new list of items to the old inventory

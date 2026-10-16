@@ -379,6 +379,23 @@
         </div>
     </form>
 </div>
+<div class="intro lesspadding">Bodies:
+    <br>
+    <div class="note">[Note: Change the quality of a single body. 100% is a completely fresh body. Only bodies you change are saved.]</div>
+</div>
+<div class="row">
+    <form class="s10 col offset-s1 editsavedata">
+        <div class="bodytoolbar">
+            <div class="bodyfilters"></div>
+            <div class="bodyactions">
+                <label><input type="checkbox" class="filled-in" id="bodysort" checked><span>Worst first</span></label>
+                <div class="btn bodyallfresh">Set shown to 100%</div>
+            </div>
+        </div>
+        <div class="bodies">
+        </div>
+    </form>
+</div>
 <div class="intro lesspadding">Relationships:
     <br>
     <div class="note">[Note: This may not work in some cases, because it does not modify the underlying quest values. I could also assume, that it gets reset after you do a specific quest.]</div>
@@ -462,6 +479,17 @@
             for (let i = 0; i < data["additionalstorage"].length; i++) {
                 await addInventory(data["additionalstorage"][i], i);
             }
+
+            // Add bodies
+            if (data["bodies"].length == 0) {
+                $(".bodytoolbar").hide();
+                $(".bodies").text("There are no bodies in this save.");
+            }
+            for (let i = 0; i < data["bodies"].length; i++) {
+                addBody(data["bodies"][i], i);
+            }
+            addBodyFilters();
+            showBodies();
 
             // Add relationships
             for (let i = 0; i < data["relationships"].length; i++) {
@@ -812,8 +840,103 @@
             });
         }
 
+        // Group a body location into the categories used by the filter buttons
+        function bodyGroup(body) {
+            if (body["source"] === "drop") return "Ground";
+            if (body["location"].startsWith("grave")) return "Graves";
+            return "Morgue";
+        }
+
+        // Update the quality bar of a body row to the given percentage
+        function updateBodyBar(el, percent) {
+            let color = percent < 50 ? "#cc5454" : percent < 80 ? "#e0a040" : "#5cb85c";
+            el.find(".bodybar div").css({"width": percent + "%", "background-color": color});
+        }
+
+        // Function to add a single body to the list, the input is the remaining durability in percent
+        function addBody(body, index) {
+
+            let location = body["source"] === "drop" ? "On the ground" : getLocalisation(body["location"]);
+            if (body["location"].startsWith("grave")) location = "Grave";
+            let percent = Math.round(body["durability"] * 1000) / 10;
+
+            let html =
+                `
+<div class="bodyrow" data-body="${index}" data-group="${bodyGroup(body)}">
+    <div class="item_icon body"></div>
+    <div class="bodyinfo">
+        <div class="bodyname">${location} <span class="itemid">#${body["index"]}</span> <span class="bodychanged">changed</span></div>
+        <div class="bodyorgans" title="${body["contents"].join(", ")}">${body["contents"].map(id => `<div class="item_icon ${sanitzize_item_id(id)}"></div>`).join("")}</div>
+    </div>
+    <div class="bodyquality">
+        <div class="bodybar"><div></div></div>
+        <input type="number" step="0.1" min="0" max="100" value="${percent}"><span>%</span>
+        <div class="btn bodyfresh">100%</div>
+    </div>
+</div>`
+            let el = $(html).appendTo(".bodies");
+            updateBodyBar(el, percent);
+        }
+
+        // Create the filter buttons with the amount of bodies in each group
+        function addBodyFilters() {
+            let groups = ["All", "Morgue", "Graves", "Ground"];
+            for (let group of groups) {
+                let count = group === "All" ? data["bodies"].length : data["bodies"].filter(b => bodyGroup(b) === group).length;
+                if (count === 0) continue;
+                $(".bodyfilters").append(`<div class="bodyfilter${group === "All" ? " active" : ""}" data-group="${group}">${group} (${count})</div>`);
+            }
+        }
+
+        // Show only the bodies of the selected group and sort them by quality if wanted
+        function showBodies() {
+            let group = $(".bodyfilter.active").attr("data-group");
+            let rows = $(".bodyrow").get();
+            if ($("#bodysort").is(":checked")) {
+                rows.sort((a, b) => data["bodies"][$(a).attr("data-body")]["durability"] - data["bodies"][$(b).attr("data-body")]["durability"]);
+            } else {
+                rows.sort((a, b) => $(a).attr("data-body") - $(b).attr("data-body"));
+            }
+            $(".bodies").append(rows);
+            for (let row of rows) {
+                $(row).toggle(group === "All" || $(row).attr("data-group") === group);
+            }
+        }
+
         // Bind events to the DOM after (most) content loaded
         function generateEvents() {
+
+            // When the quality of a body changes, store it and mark the body as changed so only that body gets saved
+            $(".bodies").on("change", "input", function () {
+                let el = $(this).closest(".bodyrow");
+                let percent = Math.min(100, Math.max(0, Number($(this).val()) || 0));
+                $(this).val(percent);
+                data["bodies"][parseInt(el.attr("data-body"))]["durability"] = percent / 100;
+                data["bodies"][parseInt(el.attr("data-body"))]["changed"] = true;
+                el.addClass("changed");
+                updateBodyBar(el, percent);
+            });
+
+            // Move the bar while typing, the value itself is stored on change
+            $(".bodies").on("input", "input", function () {
+                updateBodyBar($(this).closest(".bodyrow"), Math.min(100, Math.max(0, Number($(this).val()) || 0)));
+            });
+
+            $(".bodies").on("click", ".bodyfresh", function () {
+                $(this).closest(".bodyrow").find("input").val(100).trigger("change");
+            });
+
+            $(".bodyfilters").on("click", ".bodyfilter", function () {
+                $(".bodyfilter").removeClass("active");
+                $(this).addClass("active");
+                showBodies();
+            });
+
+            $("#bodysort").change(showBodies);
+
+            $(".bodyallfresh").click(function () {
+                $(".bodyrow:visible input").val(100).trigger("change");
+            });
 
             // If we are not loading from a savefile, remove the save to saveslot button
             if (window.location.hash.split("#")[1].split("|").length < 3) {
