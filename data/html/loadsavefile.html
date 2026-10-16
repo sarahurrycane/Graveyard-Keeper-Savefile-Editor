@@ -19,30 +19,25 @@
     <header></header>
     <main>
         <div class="con">
-            <div class="intro">
-                <h3>Following save files are available:</h3>
-            </div>
-            <div class="consaves">
-                <div class="loadingsave">
-                    <div class="preloader-wrapper big active">
-                        <div class="spinner-layer spinner-blue-only">
-                            <div class="circle-clipper left">
-                                <div class="circle"></div>
-                            </div>
-                            <div class="gap-patch">
-                                <div class="circle"></div>
-                            </div>
-                            <div class="circle-clipper right">
-                                <div class="circle"></div>
-                            </div>
-                        </div>
+            <header class="apphead">
+                <div class="apphead-title">
+                    <img src="/favicon.png" alt="">
+                    <div>
+                        <h1>Graveyard Keeper Save Editor</h1>
+                        <div class="apphead-sub">Choose a save file to edit</div>
                     </div>
                 </div>
+                <a class="btn btn-flat" href="/no settings.html#WithinApplication" onclick='window.open("/no settings.html#WithinApplication", "_blank", "location=yes,height=1000,width=800,scrollbars=yes,status=yes,dependant=true"); return false;'>⚙ Settings</a>
+            </header>
+            <div class="consaves">
+                <div class="loadingsave">
+                    <div class="spinner"></div>
+                </div>
             </div>
-            <div class="intro">
-                <h3>My thanks for the following stuff:</h3>
-            </div>
+            <details class="about">
+            <summary>About, credits and notes</summary>
             <div class="thankscon">
+                <h3>Thanks to</h3>
                 <ul>
                     <li>
                         <a href="http://lazybeargames.com/" target="_blank">Lazy Bear Games</a> for making such a great game.
@@ -63,11 +58,7 @@
                         <a href="https://materializecss.com/" target="_blank">Materialize</a> for making it easier to create the HTML content.
                     </li>
                 </ul>
-            </div>
-            <div class="intro">
-                <h3>Notes:</h3>
-            </div>
-            <div class="thankscon">
+                <h3>Notes</h3>
                 <ul>
                     <li>
                         If you have a save file which could help (for example a more up to date body of a perfect worker or the entire tech tree with all DLCs),
@@ -103,15 +94,7 @@
                     </li>
                 </ul>
             </div>
-            <div class="intro">
-                <h3>Miscellaneous:</h3>
-            </div>
-            <div class="thankscon misc">
-<a target="_blank" href="/no settings.html#WithinApplication" onclick='window.open("/no settings.html#WithinApplication", "_blank", "location=yes,height=1000,width=800,scrollbars=yes,status=yes,dependant=true"); return false;'><div class="saveslot extra">
-                    <div>Open settings again.</div>
-                </div></a>
-            </div>
-        </div>
+            </details>
         </div>
 
     </main>
@@ -154,30 +137,16 @@
             // The HTML for a single slot
             slot =
                 `<div class="saveslot" id="slot${data["num"]}">
-    <div class="slotnum valign-wrapper"><div>${data["num"]}</div></div>
+    <div class="slotnum">${data["num"]}</div>
     <div class="slotcontent">
-        <div class="row s12">
-            <div class="col s7 slottime">
-                ${data["savetime"]}
-            </div>
-            <div class="col s5 slotversion">
-                ${data["version"]}
-            </div>
-            </div>
-        <div class="row s12">
-            <div class="col s6 slotdays">Day: ${data["days"]}</div>
-            <div class="col s3 slotgraveyard">
-                <div class="gameicon i-graveyard">
-                    <img src="/rsc/Icon_skull_wreath_green.png">
-                </div>
-                ${data["graveyard"]}
-            </div>
-            <div class="col s3 slotchurch">
-            <div class="gameicon i-church">
-                    <img src="/rsc/Church_Rating_Symbol.png">
-                </div>
-                ${data["church"]}
-            </div>
+        <div class="slottop">
+            <div class="slotdays">Day ${data["days"]}</div>
+            <div class="slotversion">${data["version"]}</div>
+        </div>
+        <div class="slottime">${data["savetime"]}</div>
+        <div class="slotratings">
+            <span title="Graveyard rating"><img src="/rsc/Icon_skull_wreath_green.png">${data["graveyard"]}</span>
+            <span title="Church rating"><img src="/rsc/Church_Rating_Symbol.png">${data["church"]}</span>
         </div>
     </div>
 </div>`
@@ -196,7 +165,7 @@
             // Get only the new features out of the changelog
             let changes = txt.split(oldv)[0];
             // Add the HTML to the DOM
-            $(".con").prepend(`
+            $(".apphead").after(`
             <div 1="" class="intro newv">
                 <h3>A new Version (` + newv + `) is available! Get it on
                     <a href="https://github.com/NetroScript/Graveyard-Keeper-Savefile-Editor" target="_blank">Github</a>. There were
@@ -227,7 +196,7 @@
 
         function checkiVersion(oldv, newv) {
             if (oldv.split("\n").pop().split(" ")[0] < newv.split("\n").pop().split(" ")[0]) {
-                $(".con").prepend(`
+                $(".apphead").after(`
 <div 1="" class="intro newv">
     <h3>A new Version for the items is available! Get it manually on
         <a href="https://github.com/NetroScript/Graveyard-Keeper-Savefile-Editor" target="_blank">Github</a>. There were the following changes since your version (` + oldv.split("\n").pop().split(" ")[0] + `):</h3>
@@ -296,12 +265,8 @@
             });
             // Add additional possibilities to load save data
             $(".consaves").append(
-                `<div class="saveslot extra" id="importjson">
-<div>Import a generated .json file</div>
-</div>
-<div class="saveslot extra" id="importdat">
-    <div>Open a custom .dat file</div>
-</div>`
+                `<div class="saveslot extra" id="importjson">＋ Import a generated .json file</div>
+<div class="saveslot extra" id="importdat">＋ Open a custom .dat file</div>`
             );
         }
 

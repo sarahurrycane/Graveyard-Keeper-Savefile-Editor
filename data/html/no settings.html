@@ -17,127 +17,106 @@
 </head>
 
 <body>
-    <header></header>
     <main>
         <div class="con">
-            <div class="intro">
-                <h3>Hey, seems like you are using this Application for the first time, meaning you now have the chance to set
-                    some options. If the application automatically set a save folder please also check it to be sure that it is correct.</h3>
-            </div>
-            <div class="settingsform">
-                <div class="row">
-                    <form class="col s12">
-                        <div class="row">
-                            <div class="input-field col s12">
-                                <input placeholder="Save folder (Commonly in Appdata-LocalLow-Lazy Bear Games-Graveyard Keeper)" id="path" type="text" class="validate invalid">
-                                <label for="path" class="white-text">Folder Path</label>
-                                <a class="waves-effect waves-light btn col s2 offset-s5" id="requestfile">Open</a>
-                                <span class="helper-text" data-error="Please enter the path" data-success=""></span>
-                            </div>
+            <header class="apphead">
+                <div class="apphead-title">
+                    <img src="/favicon.png" alt="">
+                    <div>
+                        <h1>Settings</h1>
+                        <div class="apphead-sub">Welcome! Set up the editor before the first use. If a save folder was filled in automatically, please check that it is correct.</div>
+                    </div>
+                </div>
+            </header>
+            <form class="settingsform" onsubmit="return false">
+                <section class="settingsgroup">
+                    <h2>Save files</h2>
+                    <div class="setting stacked">
+                        <div class="setting-text">
+                            <label for="path">Save folder</label>
+                            <div class="note">Usually AppData/LocalLow/Lazy Bear Games/Graveyard Keeper on Windows or ~/.config/unity3d/Lazy Bear Games/Graveyard Keeper on Linux.</div>
                         </div>
-                        <div class="row">
-                            <div class="preswitch">Check for Updates on application start</div>
-                            <div class="switch">
-                                <label>
-                                    Disabled
-                                    <input type="checkbox" id="updatesc" checked>
-                                    <span class="lever"></span>
-                                    Enabled
-                                </label>
-                            </div>
+                        <div class="pathrow">
+                            <input placeholder="Path to the save folder" id="path" type="text" class="validate invalid">
+                            <a class="btn btn-flat" id="requestfile">Browse…</a>
                         </div>
-                        <div class="row port">
-                            <div class="input-field col s12">
-                                <input placeholder="" value="0" id="port" type="number" class="validate valid" min="0" max="65535" step="1">
-                                <label for="port" class="white-text">Input a port (0 chooses a random available port) - only applied after application restart</label>
-                                <span class="helper-text" data-error="Please a correct port (0-65535)" data-success=""></span>
-                            </div>
+                    </div>
+                    <div class="setting">
+                        <div class="setting-text">
+                            <label for="backupnum">Backups to keep</label>
+                            <div class="note">How many zipped backups are kept for each save when saving. It is intended that the name within the zip is always the same ([...].back_1).</div>
                         </div>
-                        <div class="row">
-                            <div class="preswitch">Open Chrome automatically</div>
-                            <div class="switch">
-                                <label>
-                                    Disabled
-                                    <input type="checkbox" id="openbrowser" checked>
-                                    <span class="lever"></span>
-                                    Enabled
-                                </label>
-                            </div>
+                        <input id="backupnum" min="0" type="number" value="2" step="1" class="validate valid">
+                    </div>
+                </section>
+
+                <section class="settingsgroup">
+                    <h2>Application</h2>
+                    <div class="setting">
+                        <div class="setting-text">
+                            <strong>Check for updates on start</strong>
+                        </div>
+                        <div class="switch"><label><input type="checkbox" id="updatesc" checked><span class="lever"></span></label></div>
+                    </div>
+                    <div class="setting">
+                        <div class="setting-text">
+                            <strong>Open Chrome automatically</strong>
                             <div class="note">When disabled, the editor only starts the local server and prints its address in the
                                 terminal, so you can open it in any browser (Firefox, Edge, ...). Closing the tab does not stop the
-                                editor, press Ctrl+C in the terminal for that. Set a fixed port above to always get the same address.
-                                Only applied after application restart.
-                            </div>
+                                editor, press Ctrl+C in the terminal for that. Set a fixed port below to always get the same address.</div>
                         </div>
-                        <div class="row">
-                            <div class="preswitch">Enable "Expert" mode</div>
-                            <div class="switch">
-                                <label>
-                                    Disabled
-                                    <input type="checkbox" id="expert">
-                                    <span class="lever"></span>
-                                    Enabled
-                                </label>
-                            </div>
-                            <div class="note">This disables all the checks the application does for invalid data, meaning the likelihood of you breaking
-                                your save with a non existent item f.e. is increased. But if you know the internal id of an item and it doesn't
-                                exist, you can add it with this option. This option does not require an application restart, but it requires a
-                                page reload (so that the settings are loaded again).
-                            </div>
+                        <div class="switch"><label><input type="checkbox" id="openbrowser" checked><span class="lever"></span></label></div>
+                    </div>
+                    <div class="setting">
+                        <div class="setting-text">
+                            <label for="port">Port</label>
+                            <div class="note">0 chooses a random free port.</div>
                         </div>
-                        <div class="row">
-                            <div class="preswitch">Stranger Sins Support</div>
-                            <div class="switch">
-                                <label>
-                                    Disabled
-                                    <input type="checkbox" id="strangersins">
-                                    <span class="lever"></span>
-                                    Enabled
-                                </label>
-                            </div>
-                            <div class="preswitch">Game Of Crone Support</div>
-                            <div class="switch">
-                                <label>
-                                    Disabled
-                                    <input type="checkbox" id="gameofcrone">
-                                    <span class="lever"></span>
-                                    Enabled
-                                </label>
-                            </div>
-                            <div class="preswitch">Better Save Soul Support</div>
-                            <div class="switch">
-                                <label>
-                                    Disabled
-                                    <input type="checkbox" id="bettersavesoul">
-                                    <span class="lever"></span>
-                                    Enabled
-                                </label>
-                            </div>
-                            <div class="note">This allows you to select which DLC you own.
-                                <br/> Depending on owned DLC different autocomplete names are shown.
-                                Additionally some buttons have different functionality depending on the DLCs.
-                            </div>
-                        </div>
-                        <div class="row">
-                            <div class="input-field col s12">
-                                <input  id="backupnum" min="0" type="number" value="2" step="1" class="validate valid">
-                                <label for="backupnum" class="white-text">Up to how many backups should be kept by the editor when saving? (Each save)</label>
-                                <span class="helper-text" data-error="Please enter a number" data-success=""></span>
-                            </div>
-                            <div class="note">Backup saves are automatically zipped with deflate to save space on the disk. It is intended and correct that the name within the zip is always the same ([...].back_1).
-                            </div>
-                        </div>
-                    </form>
-                </div>
-            </div>
-            <div class="row">
-                <a class="waves-effect waves-light btn col s4 offset-s4" id="donebtn">Done</a>
-            </div>
+                        <input placeholder="" value="0" id="port" type="number" class="validate valid" min="0" max="65535" step="1">
+                    </div>
+                    <div class="setting">
+                        <div class="note">Changes in this group are applied after restarting the application.</div>
+                    </div>
+                </section>
 
+                <section class="settingsgroup">
+                    <h2>Editing</h2>
+                    <div class="setting">
+                        <div class="setting-text">
+                            <strong>Expert mode</strong>
+                            <div class="note">Disables all checks for invalid data, so it is easier to break your save, for example with a non
+                                existent item. Useful if you know the internal id of an item the editor does not list. Requires a page reload.</div>
+                        </div>
+                        <div class="switch"><label><input type="checkbox" id="expert"><span class="lever"></span></label></div>
+                    </div>
+                </section>
+
+                <section class="settingsgroup">
+                    <h2>DLCs you own</h2>
+                    <div class="setting">
+                        <div class="setting-text"><strong>Stranger Sins</strong></div>
+                        <div class="switch"><label><input type="checkbox" id="strangersins"><span class="lever"></span></label></div>
+                    </div>
+                    <div class="setting">
+                        <div class="setting-text"><strong>Game Of Crone</strong></div>
+                        <div class="switch"><label><input type="checkbox" id="gameofcrone"><span class="lever"></span></label></div>
+                    </div>
+                    <div class="setting">
+                        <div class="setting-text"><strong>Better Save Soul</strong></div>
+                        <div class="switch"><label><input type="checkbox" id="bettersavesoul"><span class="lever"></span></label></div>
+                    </div>
+                    <div class="setting">
+                        <div class="note">Depending on the DLCs, different items are suggested and some utility functions behave differently.</div>
+                    </div>
+                </section>
+
+                <div class="settingsactions">
+                    <a class="btn" id="donebtn">Save settings</a>
+                </div>
+            </form>
         </div>
 
     </main>
-    <footer></footer>
     <script>
 
         let disable_context_menu = true;
@@ -163,7 +142,7 @@
             if(window.location.hash == "#WithinApplication"){
                 console.log("We already have settings, so we load them");
                 $("title").text("Graveyard Keeper Savefile Editor | Settings");
-                $(".intro h3").text("To apply changed settings, please restart the applications after clicking DONE.");
+                $(".apphead-sub").text("Some settings are only applied after restarting the application.");
                 getSettings();
             } else {
                 console.log("First time using the application, trying to get default folder.")
@@ -171,10 +150,10 @@
                     $("#path").val(path);
                     $("#path").removeClass("invalid");
                 });
-                
+
             }
         });
-        
+
         // Function to call the python function to select a folder for the save file.
         async function getFolder() {
             f = await eel.get_folder($("#path").val())();
@@ -202,7 +181,7 @@
                 window.close()
             } else {
                 window.location = "/loadsavefile.html";
-            }  
+            }
         }
 
         // Load the settings from the python application and prefill the form
@@ -219,7 +198,7 @@
             $("#port").val(b["port"]);
             $("#backupnum").val(b["backupamount"]);
         }
-        
+
         // Bind the click of the button to the getFolder function
         $("#requestfile").click(function (e) {
             console.log("Loading Folder");
