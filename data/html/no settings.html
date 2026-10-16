@@ -54,6 +54,22 @@
                             </div>
                         </div>
                         <div class="row">
+                            <div class="preswitch">Open Chrome automatically</div>
+                            <div class="switch">
+                                <label>
+                                    Disabled
+                                    <input type="checkbox" id="openbrowser" checked>
+                                    <span class="lever"></span>
+                                    Enabled
+                                </label>
+                            </div>
+                            <div class="note">When disabled, the editor only starts the local server and prints its address in the
+                                terminal, so you can open it in any browser (Firefox, Edge, ...). Closing the tab does not stop the
+                                editor, press Ctrl+C in the terminal for that. Set a fixed port above to always get the same address.
+                                Only applied after application restart.
+                            </div>
+                        </div>
+                        <div class="row">
                             <div class="preswitch">Enable "Expert" mode</div>
                             <div class="switch">
                                 <label>
@@ -176,7 +192,8 @@
                 "strangersins": $("#strangersins").prop("checked") || false,
                 "gameofcrone": $("#gameofcrone").prop("checked") || false,
                 "bettersavesoul":  $("#bettersavesoul").prop("checked") || false,
-                "backupamount": parseInt($("#backupnum").val()) || 2
+                "backupamount": parseInt($("#backupnum").val()) || 2,
+                "openbrowser": $("#openbrowser").prop("checked")
             }
             await eel.set_settings(settings)();
 
@@ -198,6 +215,7 @@
             $("#strangersins").prop("checked", b["strangersins"]);
             $("#gameofcrone").prop("checked", b["gameofcrone"]);
             $("#bettersavesoul").prop("checked", b["bettersavesoul"]);
+            $("#openbrowser").prop("checked", b["openbrowser"] !== false);
             $("#port").val(b["port"]);
             $("#backupnum").val(b["backupamount"]);
         }

@@ -9,6 +9,7 @@ import os
 import sys
 import json
 import random
+import socket
 from data.hashes import Hashlist
 from data.decode import Decoder
 from data.encode import Encoder
@@ -75,6 +76,8 @@ def load_settings():
             options["gameofcrone"] = False
         if "bettersavesoul" not in options:
             options["bettersavesoul"] = False
+        if "openbrowser" not in options:
+            options["openbrowser"] = True
 
         web_app_options["port"] = options["port"]
 
@@ -1157,6 +1160,26 @@ def tkinter_gain_focus():
     root.focus_force()
 
 
+# Start only the local server without opening a browser, so the user can open the editor in any browser
+def run_without_browser(page):
+    port = web_app_options["port"]
+
+    # With port 0 we pick a free port ourselves, because we need to know it to tell the user the address
+    if port == 0:
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+            s.bind(("localhost", 0))
+            port = s.getsockname()[1]
+
+    print("")
+    print("The editor is running without opening a browser. Open this address in any browser:")
+    print("    http://localhost:" + str(port) + "/" + page.replace(" ", "%20"))
+    print("Press Ctrl+C here to stop the editor.")
+    print("")
+
+    # Keep running when all tabs are closed (the default would exit), so the address can be opened again
+    eel.start(page, mode=False, port=port, close_callback=lambda page, sockets: None)
+
+
 def run():
     global web_app_options
 
@@ -1166,7 +1189,9 @@ def run():
     # application
     if os.path.isfile("./data/settings"):
         load_settings()
-        if version.parse(eel_version) >= version.parse("0.11.0"):
+        if not options["openbrowser"]:
+            run_without_browser("loadsavefile.html")
+        elif version.parse(eel_version) >= version.parse("0.11.0"):
             eel.start("loadsavefile.html", mode="chrome", port=web_app_options["port"],
                       cmdline_args=web_app_options["chromeFlags"])
         else:
