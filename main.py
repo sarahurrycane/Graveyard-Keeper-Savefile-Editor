@@ -9,6 +9,7 @@ import os
 import sys
 import json
 import random
+import re
 import socket
 from data.hashes import Hashlist
 from data.decode import Decoder
@@ -494,6 +495,9 @@ def modify_save(data, shash):
         item["v"]["_params"]["v"]["_durability"] = \
             modify_value_type(shash, item["v"]["_params"]["v"]["_durability"], new_durability)
 
+        if body.get("contents_changed"):
+            change_body_organs(shash, item, body["contents"])
+
     # In the following block World Game Objects are iterated
     # For us specifically interesting are all storage units + workers and bodies to modify the items in them
     i2 = 0  # Index of the storage unit in our storage unit array
@@ -938,6 +942,49 @@ def get_body_item(savedata, source, index, position):
     return item
 
 
+# Dark organs have fixed skulls instead of skulls in the id, but they can replace the normal organ of the same kind
+DARK_ORGANS = {
+    "heart_dark": "heart:heart",
+    "brain_dark": "brain:brain",
+    "intestine_dark": "intestine:intestine"
+}
+
+
+# Organs and embalming items carry their skulls in the id: "heart:heart_-2_3" has -2 red and 3 white skulls.
+# Returns the part of the id which has to stay the same when swapping variants (f.e. "heart:heart") or None
+def organ_base(organ_id):
+    if organ_id in DARK_ORGANS:
+        return DARK_ORGANS[organ_id]
+    match = re.match(r"^(\w+:\w+|embalm)_-?\d_-?\d$", organ_id)
+    return match.group(1) if match else None
+
+
+# Swap organs of a body for other variants of the same organ, which changes the red and white skulls of the body
+def change_body_organs(shash, body_item, new_ids):
+    inventory = body_item["v"]["inventory"]["v"]
+
+    for position, new_id in enumerate(new_ids):
+        if position >= len(inventory):
+            break
+
+        organ = inventory[position]["v"]
+        old_id = organ["id"]["v"]
+
+        # Ids which needed fixing while loading can't be changed safely
+        if not isinstance(old_id, str) or old_id == new_id:
+            continue
+
+        # Only allow a different variant of the same organ which exists in the game
+        if organ_base(old_id) is None or organ_base(old_id) != organ_base(new_id):
+            print("Not changing organ " + old_id + " to " + str(new_id) + ", it is not a variant of the same organ")
+            continue
+        if new_id not in gamedata["items"] and not options.get("expert"):
+            print("Not changing organ " + old_id + " to " + new_id + ", the item does not exist in the game")
+            continue
+
+        organ["id"] = modify_value_type(shash, organ["id"], new_id)
+
+
 # Function to list all bodies in the world, so the decay (durability) of a single body can be changed
 def get_bodies(savedata):
     bodies = []
@@ -947,10 +994,13 @@ def get_bodies(savedata):
         if item is None:
             return
 
+        # One entry per item, so the index in this list is the position in the body inventory. Ids which were fixed
+        # while loading are stored as a dict, for those we use the fixed name like get_inventory does
         contents = []
         if "inventory" in item["v"] and item["v"]["inventory"]["type"] == Types.GenericList:
-            contents = [x["v"]["id"]["v"] for x in item["v"]["inventory"]["v"]
-                        if isinstance(x["v"]["id"]["v"], str)]
+            for x in item["v"]["inventory"]["v"]:
+                organ_id = x["v"]["id"]["v"]
+                contents.append(organ_id["string"] if isinstance(organ_id, dict) else organ_id)
 
         bodies.append({
             "source": source,

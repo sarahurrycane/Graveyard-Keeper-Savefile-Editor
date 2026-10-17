@@ -1123,8 +1123,123 @@ details.tools[open] > summary::after {
     font-size: 0.9rem;
 }
 
+.bodyrow {
+    flex-wrap: wrap;
+}
+
 .bodyrow.changed {
     border-left-color: var(--warn);
+}
+
+.btn[hidden] {
+    display: none;
+}
+
+/* Skull totals of a body, the red skull is the white skull icon recolored */
+.bodyskulls {
+    display: inline-flex;
+    gap: 8px;
+    margin-left: 6px;
+    font-size: 0.82rem;
+    font-weight: 600;
+    vertical-align: middle;
+}
+
+.skullcount {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+}
+
+.skullcount::before {
+    content: "";
+    width: 13px;
+    height: 13px;
+    background: url("/rsc/White_Skull_Symbol.png") center / contain no-repeat;
+    image-rendering: pixelated;
+}
+
+.skull-white {
+    color: var(--text);
+}
+
+.skull-red {
+    color: #ef7a72;
+}
+
+.skullcount.skull-red::before {
+    filter: sepia(1) saturate(8) hue-rotate(-40deg) brightness(0.9);
+}
+
+.bodyrow.open .bodyskullsbtn {
+    background-color: var(--accent-soft);
+    border-color: var(--accent);
+    color: var(--accent);
+}
+
+.organpanel {
+    display: none;
+    flex: 0 0 100%;
+    margin-top: 4px;
+    padding-top: 8px;
+    border-top: 1px solid var(--border);
+}
+
+.bodyrow.open .organpanel {
+    display: block;
+}
+
+.organrow {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 4px 0;
+}
+
+.organrow .item_icon {
+    flex: none;
+    width: 24px !important;
+    height: 24px !important;
+    display: inline-block !important;
+}
+
+.organname {
+    flex: 1;
+    min-width: 0;
+}
+
+select.organselect {
+    width: 200px;
+    height: 30px;
+    padding: 0 8px;
+    background-color: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    color: var(--text);
+    font-family: var(--font);
+    font-size: 0.85rem;
+}
+
+select.organselect:focus {
+    outline: none;
+    border-color: var(--accent);
+}
+
+.organfooter {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 8px;
+}
+
+.organfooter .note {
+    flex: 1;
+    font-size: 0.8rem;
+}
+
+.organfooter .btn {
+    height: 30px;
+    font-size: 0.82rem;
 }
 
 .bodyrow > .item_icon {
