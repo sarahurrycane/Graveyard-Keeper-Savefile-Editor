@@ -866,9 +866,10 @@
                     if (skulls) (organ_variants[skulls.base] = organ_variants[skulls.base] || []).push(id);
                 }
                 for (let b in organ_variants) {
+                    // Most white skulls first, then least red skulls
                     organ_variants[b].sort((x, y) => {
                         let a = organSkulls(x), c = organSkulls(y);
-                        return (c.white - c.red) - (a.white - a.red) || a.red - c.red;
+                        return c.white - a.white || a.red - c.red;
                     });
                 }
             }
@@ -892,12 +893,52 @@
             return (skulls.dark ? "Dark · " : "") + `${skulls.white} white, ${skulls.red} red`;
         }
 
-        // Show the skull totals of a body and mark it as changed if it differs from the loaded state
+        // Choose the variant of every swappable organ so the body ends with 0 red skulls and as many white skulls as
+        // possible. The skulls are summed with their sign and the game shows each color at least as 0, so a negative
+        // red sum only helps to cancel red skulls of other parts. Embalming items stay as they are, because they are
+        // the injections which were done. Returns the chosen id for every select, in the order of the selects.
+        function bestOrgans(contents, selects) {
+            let positions = selects.map(s => parseInt($(s).attr("data-position")));
+
+            // Skulls of everything which is not changed
+            let fixed = bodySkulls(contents.filter((id, i) => !positions.includes(i)));
+
+            // Best white sum for every reachable red sum
+            let best = new Map([[0, {white: 0, picks: []}]]);
+            for (let s of selects) {
+                let next = new Map();
+                for (let [red, state] of best) {
+                    for (let option of $(s).find("option")) {
+                        let skulls = organSkulls(option.value);
+                        let key = red + skulls.red;
+                        let white = state.white + skulls.white;
+                        if (!next.has(key) || next.get(key).white < white) {
+                            next.set(key, {white: white, picks: state.picks.concat(option.value)});
+                        }
+                    }
+                }
+                best = next;
+            }
+
+            let results = [...best].map(([red, state]) => ({red: red + fixed.red, white: state.white, picks: state.picks}));
+            let clean = results.filter(r => r.red <= 0);
+            if (clean.length) {
+                clean.sort((a, b) => b.white - a.white || a.red - b.red);
+                return clean[0].picks;
+            }
+            // 0 red is not reachable, so get as close as possible
+            results.sort((a, b) => a.red - b.red || b.white - a.white);
+            return results[0].picks;
+        }
+
+        // Show the skull totals of a body like the game does (at least 0) and mark it as changed if it differs from the
+        // loaded state
         function refreshBody(el) {
             let body = data["bodies"][parseInt(el.attr("data-body"))];
             let skulls = bodySkulls(body["contents"]);
-            el.find(".skull-white").text(skulls.white);
-            el.find(".skull-red").text(skulls.red);
+            el.find(".skull-white").text(Math.max(0, skulls.white));
+            el.find(".skull-red").text(Math.max(0, skulls.red));
+            el.find(".bodyskulls").attr("title", `White and red skulls of the organs (sum with sign: ${skulls.white} white, ${skulls.red} red)`);
             el.find(".bodyorgans").attr("title", body["contents"].join(", "));
 
             body["contents_changed"] = body["contents"].some((id, i) => id !== body["original_contents"][i]);
@@ -1027,11 +1068,13 @@
                 refreshBody(el);
             });
 
-            // Choose the best variant of every organ, the options are sorted best first
+            // Choose the organs which give the body 0 red and the most white skulls, injections are not changed
             $(".bodies").on("click", ".organbest", function () {
-                $(this).closest(".bodyrow").find(".organselect").each(function () {
-                    $(this).val($(this).find("option").first().val()).trigger("change");
-                });
+                let el = $(this).closest(".bodyrow");
+                let body = data["bodies"][parseInt(el.attr("data-body"))];
+                let selects = el.find(".organselect").get().filter(s => organSkulls($(s).val()).base !== "embalm");
+                let picks = bestOrgans(body["contents"], selects);
+                selects.forEach((s, i) => $(s).val(picks[i]).trigger("change"));
             });
 
             $(".bodies").on("click", ".organreset", function () {
